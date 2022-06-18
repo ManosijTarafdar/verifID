@@ -1,3 +1,5 @@
+from asyncore import write
+from urllib import response
 from django.http import HttpResponse
 from django.shortcuts import render , redirect
 from django.contrib.auth import logout
@@ -8,6 +10,7 @@ import uuid , re
 import qrcode
 from PIL import Image , ImageDraw , ImageFont
 from .models import TeacherData
+import csv
 #---------------------------------------
 # Firebase Module Block
 #---------------------------------------
@@ -44,15 +47,30 @@ def get_routine(teacherName):
     imgurl =  fireStoreObject.child(destinationPath).get_url(None)
     return imgurl
 #Download Routine 
-def get_routineDownloaded(teacherName):
-    try:
-        os.mkdir("c:\\verifidDownloads")
-    except:
-        pass
-    os.chdir("c:\\verifidDownloads")
+import requests
+def get_routineDownloaded(request):
+    fname = request.user.first_name
+    lname = request.user.last_name
+    teacherName = fname + lname
     downPath = teacherName+"/routine.jpg"
     fireStoreObject = fireStore()
-    fireStoreObject.child(downPath).download(filename="download.jpg",path="")
+    downloadURL = fireStoreObject.child(downPath).get_url(None)
+    response = HttpResponse(content_type = "image/png")
+    response['Content-Disposition'] = "attachment;filename=image.png"
+    response.write(requests.get(downloadURL).content)
+    return response
+#Download ID
+def get_idDownloaded(request):
+    fname = request.user.first_name
+    lname = request.user.last_name
+    teacherName = fname + lname
+    downPath = teacherName+"/idCard.png"
+    fireStoreObject = fireStore()
+    downloadURL = fireStoreObject.child(downPath).get_url(None)
+    response = HttpResponse(content_type = "image/png")
+    response['Content-Disposition'] = "attachment;filename=idCard.png"
+    response.write(requests.get(downloadURL).content)
+    return response
 #--------------------------------
 # End
 #--------------------------------
@@ -85,6 +103,53 @@ def mongoAttendanceDB(timeStamp,subjectCode,attendanceList):
     else:
         myCollection.insert_one(myData)
     return insertFlag
+
+def archive(request):
+    if request.method == "POST":
+        subject_code = request.POST['subjectcode']
+        response = HttpResponse(content_type = "text/csv")
+        response['Content-Disposition'] = "attachment;filename=attendance.csv"
+        writer = csv.writer(response)
+        # setup connection with cluster
+        myCluster = MongoClient("mongodb+srv://teacher_mckvie:Kookaburra06@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority",tls=True,tlsAllowInvalidCertificates=True)
+        # setup connection with database
+        myDB = myCluster["attendanceMCKVIE"]
+        myClassDB = myCluster["studentData"]
+        # setup connnection with collection
+        myCollection = myDB[subject_code]
+        myClassCollection = myClassDB["CSE"]
+        collectionsCount = myCollection.count_documents({})
+        collectionsData = myCollection.find({})
+        fileHeader = list()
+        fileHeader.append("Roll")
+        fileHeader.append("Name")
+        for i in range(collectionsCount):
+            fileHeader.append(collectionsData[i]['timeStamp'])
+        writer.writerow(fileHeader)
+        rowData = list()
+        batchInfoDoc = myClassCollection.find_one({'batch':'2019-23','currentSem':6})
+        totalClassStrength = batchInfoDoc['totalStrength']
+        for i in range(1,totalClassStrength+1):
+            rowData.append(i)
+            studentName = myClassCollection.find_one({'Roll':i})
+            rowData.append(studentName['Name'])
+            for j in range(collectionsCount):
+                rowData.append(collectionsData[j]['AttendanceList'][i])
+            writer.writerow(rowData)
+            rowData.clear()
+        return response
+    return render(request,'teachers/archivedata.html')
+
+def getClassStrength(stream):
+    # setup connection with cluster
+    myCluster = MongoClient("mongodb+srv://teacher_mckvie:Kookaburra06@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority",tls=True,tlsAllowInvalidCertificates=True)
+    # setup connection with database
+    myDB = myCluster["studentData"]
+    # setup connnection with collection
+    myCollection = myDB[stream]
+    data = myCollection.find_one({'batch':'2019-23','currentSem':6})
+    totalStrength = data['totalStrength']
+    return totalStrength
 #---------------------------------
 # End
 #---------------------------------
@@ -98,13 +163,13 @@ def dashboard(request):
 def routineTeacher(request):
     fname = request.user.first_name
     lname = request.user.last_name
-    if request.method == "GET":
-        get_routineDownloaded(fname+lname)
+    if request.method == "POST":
+        return redirect('downloadRoutine')
     img_url = get_routine(fname+lname)
     context = {
         'url' :img_url
     }
-    os.chdir(HOME_DIR)
+    #os.chdir(HOME_DIR)
     return render(request,'teachers/routine.html',context)
 
 def announcement(request):
@@ -132,7 +197,7 @@ def attendance(request):
             attendanceList = list(map(int,attendanceList.split(' ')))
         logBook = list()
         logBook.append('null')
-        for i in range(1,73):
+        for i in range(1,getClassStrength("CSE")+1):
             if i in attendanceList:
                 logBook.append('P')
             else:
@@ -166,21 +231,16 @@ def myid(request):
     draw.text((371,210),teacherDataObject.department,fill = "black",font=ImageFont.truetype("Ubuntu-Regular.ttf",size=20))
     pic = Image.open('qr.jpg').resize((196,218),Image.ANTIALIAS)
     template.paste(pic,(61,116,257,334))
-    try:
-        os.mkdir("c:\\verifidDownloads")
-    except:
-        pass
-    os.chdir("c:\\verifidDownloads")
     template.save("idCard.png")
-    #reset dir
-    os.chdir(HOME_DIR)
-    return render(request,'teachers/dash.html')
+    fireStoreObject = fireStore()
+    path = request.user.first_name + request.user.last_name + "/idCard.png"
+    fireStoreObject.child(path).put("idCard.png")
+    return redirect('downloadid')
 
 def uploadAssignment(request):
     if request.method == "POST":
         fileName = dt.now().strftime("%d%m%Y%H%M%S") + "assignment.jpeg"
         fireStoreObject = fireStore()
         path = request.user.first_name + request.user.last_name + '/upload/' + fileName
-        print(path)
         fireStoreObject.child(path).put(request.FILES['asgimg'])
     return render(request,'teachers/uploadAssignment.html')
