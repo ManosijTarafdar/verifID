@@ -11,6 +11,7 @@ import qrcode
 from PIL import Image , ImageDraw , ImageFont
 from .models import TeacherData
 import csv
+import xlwt
 #---------------------------------------
 # Firebase Module Block
 #---------------------------------------
@@ -111,11 +112,14 @@ def mongoAttendanceDB(timeStamp,subjectCode,attendanceList):
 def archive(request):
     if request.method == "POST":
         subject_code = request.POST['subjectcode']
-        response = HttpResponse(content_type = "text/csv")
-        response['Content-Disposition'] = "attachment;filename=attendance.csv"
-        writer = csv.writer(response)
+        response = HttpResponse(content_type = "application/ms-excel")
+        response['Content-Disposition'] = "attachment;filename=attendance"+ subject_code +".xls"
+        wb = xlwt.Workbook(encoding='utf-8')
+        ws = wb.add_sheet(subject_code)
+        # cluster URL
+        clusterURL = "mongodb+srv://"+credentials.MONGODB_USERNAME+":"+credentials.MONGODB_PASSWORD+"@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority"
         # setup connection with cluster
-        myCluster = MongoClient("mongodb+srv://teacher_mckvie:Kookaburra06@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority",tls=True,tlsAllowInvalidCertificates=True)
+        myCluster = MongoClient(clusterURL,tls=True,tlsAllowInvalidCertificates=True)
         # setup connection with database
         myDB = myCluster["attendanceMCKVIE"]
         myClassDB = myCluster["studentData"]
@@ -124,29 +128,34 @@ def archive(request):
         myClassCollection = myClassDB["CSE"]
         collectionsCount = myCollection.count_documents({})
         collectionsData = myCollection.find({})
-        fileHeader = list()
-        fileHeader.append("Roll")
-        fileHeader.append("Name")
+        columns = list()
+        columns.append("Roll")
+        columns.append("Name")
         for i in range(collectionsCount):
-            fileHeader.append(collectionsData[i]['timeStamp'])
-        writer.writerow(fileHeader)
-        rowData = list()
+            columns.append(collectionsData[i]['timeStamp'])
+        for colNum in range(len(columns)):
+            ws.write(0,colNum,columns[colNum])
         batchInfoDoc = myClassCollection.find_one({'batch':'2019-23','currentSem':6})
         totalClassStrength = batchInfoDoc['totalStrength']
-        for i in range(1,totalClassStrength+1):
-            rowData.append(i)
-            studentName = myClassCollection.find_one({'Roll':i})
+        rowData = list()
+        for rowNum in range(1,totalClassStrength+1):
+            rowData.append(rowNum)
+            studentName = myClassCollection.find_one({'Roll':rowNum})
             rowData.append(studentName['Name'])
             for j in range(collectionsCount):
                 rowData.append(collectionsData[j]['AttendanceList'][i])
-            writer.writerow(rowData)
+            for k in range(len(rowData)):
+                ws.write(rowNum,k,rowData[k])
             rowData.clear()
+        wb.save(response)
         return response
     return render(request,'teachers/archivedata.html')
 
 def getClassStrength(stream):
+    # cluster URL
+    clusterURL = "mongodb+srv://"+credentials.MONGODB_USERNAME+":"+credentials.MONGODB_PASSWORD+"@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority"
     # setup connection with cluster
-    myCluster = MongoClient("mongodb+srv://teacher_mckvie:Kookaburra06@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority",tls=True,tlsAllowInvalidCertificates=True)
+    myCluster = MongoClient(clusterURL,tls=True,tlsAllowInvalidCertificates=True)
     # setup connection with database
     myDB = myCluster["studentData"]
     # setup connnection with collection
