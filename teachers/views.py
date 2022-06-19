@@ -30,7 +30,7 @@ def FirebaseConnection():
                         'storageBucket': credentials.FIREBASE_STORAGE_BUCKET,
                         'messagingSenderId': credentials.FIREBASE_SENDER_ID,
                         'appId': credentials.FIREBASE_APP_ID,
-                        'measurementId': credentials.FIREBASE_MEASUREMENT_ID
+                        'measurementId': credentials.FIREBASE_MEASUREMENT_ID,
     }
     firebase = pyrebase.initialize_app(firebaseConfigdefault)
     return firebase
@@ -163,6 +163,23 @@ def getClassStrength(stream):
     data = myCollection.find_one({'batch':'2019-23','currentSem':6})
     totalStrength = data['totalStrength']
     return totalStrength
+
+def setAncLog(collectionName,filePath,subjectCode,about,dateOfSubmit):
+    # cluster URL
+    clusterURL = "mongodb+srv://"+credentials.MONGODB_USERNAME+":"+credentials.MONGODB_PASSWORD+"@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority"
+    # setup connection with cluster
+    myCluster = MongoClient(clusterURL,tls=True,tlsAllowInvalidCertificates=True)
+    # setup connection with database
+    myDB = myCluster["announcementData"]
+    # setup connnection with collection
+    myCollection = myDB[collectionName]
+    data = {
+        'subjectCode':subjectCode,
+        'about':about,
+        'dateOfSubmit':dateOfSubmit,
+        'filePath':filePath,
+    }
+    myCollection.insert_one(data)
 #---------------------------------
 # End
 #---------------------------------
@@ -188,7 +205,7 @@ def routineTeacher(request):
 def announcement(request):
     if request.method == "POST":
         announcementText = request.POST['announcement']
-        timeStamp = dt.now().strftime('%d/%m%y')
+        timeStamp = dt.now().strftime('%d/%m/%y')
         teacherName = request.user.get_full_name()
         data = {
             'date':timeStamp,
@@ -256,4 +273,9 @@ def uploadAssignment(request):
         fireStoreObject = fireStore()
         path = request.user.first_name + request.user.last_name + '/upload/' + fileName
         fireStoreObject.child(path).put(request.FILES['asgimg'])
+        filePath = fireStoreObject.child(path).get_url(None)
+        description = request.POST['aboutannc']
+        subjectCode = request.POST['subjectcode']
+        dateOfSubmit = request.POST['dos']
+        setAncLog("collection01",filePath,subjectCode,description,dateOfSubmit)
     return render(request,'teachers/uploadAssignment.html')
