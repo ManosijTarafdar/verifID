@@ -18,17 +18,18 @@ import pyrebase
 import os
 
 from verifID.settings import HOME_DIR
+from . import credentials
 #Firebase Connection
 def FirebaseConnection():
     firebaseConfigdefault = {
-                        'apiKey': "AIzaSyCsTnnNo2xWxC4eUGXo_mz6tAZrppEmwjc",
-                        'authDomain': "verifid-3868b.firebaseapp.com",
-                        'projectId': "verifid-3868b",
-                        'databaseURL': "https://verifid-3868b-default-rtdb.firebaseio.com",
-                        'storageBucket': "verifid-3868b.appspot.com",
-                        'messagingSenderId': "689321406534",
-                        'appId': "1:689321406534:web:5f557e74e0a683c47d5a47",
-                        'measurementId': "G-E8631GH36G"
+                        'apiKey': credentials.FIREBASE_API_KEY,
+                        'authDomain': credentials.FIREBASE_AUTH_DOMAIN,
+                        'projectId': credentials.FIREBASE_PROJECT_ID,
+                        'databaseURL': credentials.FIREBASE_DATABASE_URL,
+                        'storageBucket': credentials.FIREBASE_STORAGE_BUCKET,
+                        'messagingSenderId': credentials.FIREBASE_SENDER_ID,
+                        'appId': credentials.FIREBASE_APP_ID,
+                        'measurementId': credentials.FIREBASE_MEASUREMENT_ID
     }
     firebase = pyrebase.initialize_app(firebaseConfigdefault)
     return firebase
@@ -78,11 +79,14 @@ def get_idDownloaded(request):
 #--------------------------------
 import pymongo
 from pymongo import MongoClient
+from . import credentials
 def mongoAttendanceDB(timeStamp,subjectCode,attendanceList):
     # For Successful Insertion
     insertFlag = True
+    # cluster URL
+    clusterURL = "mongodb+srv://"+credentials.MONGODB_USERNAME+":"+credentials.MONGODB_PASSWORD+"@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority"
     # setup Connection with cluster
-    myCluster = MongoClient("mongodb+srv://teacher_mckvie:Kookaburra06@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority",tls=True,tlsAllowInvalidCertificates=True)
+    myCluster = MongoClient(clusterURL,tls=True,tlsAllowInvalidCertificates=True)
     # setup connection with database
     myDB = myCluster["attendanceMCKVIE"]
     # setup connnection with collection
