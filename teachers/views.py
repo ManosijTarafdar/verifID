@@ -143,7 +143,7 @@ def archive(request):
             studentName = myClassCollection.find_one({'Roll':rowNum})
             rowData.append(studentName['Name'])
             for j in range(collectionsCount):
-                rowData.append(collectionsData[j]['AttendanceList'][i])
+                rowData.append(collectionsData[j]['AttendanceList'][rowNum])
             for k in range(len(rowData)):
                 ws.write(rowNum,k,rowData[k])
             rowData.clear()
