@@ -12,6 +12,5 @@ urlpatterns = [
     path('id/',views.myid, name='myId'),
     path('download/',views.get_routineDownloaded, name='downloadRoutine'),
     path('myid/',views.get_idDownloaded, name='downloadid'),
-    #Testing
     path('archive/',views.archive,name = 'archive'),
 ]

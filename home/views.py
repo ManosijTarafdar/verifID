@@ -5,17 +5,29 @@ from teachers.models import TeacherData
 import uuid,re
 # Create your views here.
 def homePage(request):
+    # If already logged in
     if request.user.is_authenticated:
-        return redirect('teacherPanel/')
+        group = request.user.groups.all()[0].name
+        if group == 'teachers':
+            return redirect('teacherDashboard/')
+        elif group == 'students':
+            return redirect('studentDashboard/')
+        else:
+            return HttpResponse("NOT AUTHORIZED")
+    # Initial login
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
         userobj = authenticate(request,username=username, password = password)
         if userobj is not None:
             login(request,userobj)
-            return redirect('teacherPanel/')
-        else:
-            return HttpResponse("Error")
+            group = request.user.groups.all()[0].name
+            if group == 'teachers':
+                return redirect('teacherDashboard/')
+            elif group == 'students':
+                return redirect('studentDashboard/')
+            else:
+                return HttpResponse("NOT AUTHORIZED")
     return render(request,'home/log.html')
 
 def logoutUser(request):

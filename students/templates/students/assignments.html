@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcements</title>
+    <!-- <link rel="stylesheet" href="table.css"> -->
+</head>
+<style>
+    *{
+    margin: 0px;
+    padding: 0;
+    font-family: monospace;
+    font-size: 30px;
+}
+table{
+    border: 1px solid black;
+    border-collapse: separate;
+    border-spacing: 0px;
+    min-width: max-content;
+}
+th{
+    position: sticky;
+    top: 0px;
+    background-color: crimson;
+    color: whitesmoke;
+}
+.table-wrapper{
+    max-height: 300px;
+    overflow-y: scroll;
+    margin: 20px;
+}
+th,td{
+    border: 1px solid black;
+    padding: 10px;
+}
+.outer-wrapper{
+    border: 1px solid crimson;
+    box-shadow: 0px 0px 3px crimson;
+    margin: 20px;
+    border-radius: 10px;
+    max-width: fit-content;
+}
+</style>
+<body>
+    <div class="outer-wrapper">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <th>SL No.</th>
+                    <th>Subject Code</th>
+                    <th>Title</th>
+                    <th>Posted on</th>
+                    <th>Last date of submit</th>
+                    <th>Action</th>
+                </thead>
+                <tbody>
+                    {% for i in dataList%}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        {% for j in i %}
+                        {% if j|length >= 20 %}
+                            <td><a href={{j}}>view</a></td>
+                        {% else %}
+                            <td>{{j}}</td>
+                        {% endif %}
+                        {% endfor %}
+                    </tr>  
+                    {% endfor %}  
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -173,9 +173,11 @@ def setAncLog(collectionName,filePath,subjectCode,about,dateOfSubmit):
     myDB = myCluster["announcementData"]
     # setup connnection with collection
     myCollection = myDB[collectionName]
+    timeStamp = dt.now().strftime('%d-%m-%y')
     data = {
         'subjectCode':subjectCode,
         'about':about,
+        'datePosted': timeStamp,
         'dateOfSubmit':dateOfSubmit,
         'filePath':filePath,
     }
@@ -205,6 +207,7 @@ def routineTeacher(request):
 def announcement(request):
     if request.method == "POST":
         announcementText = request.POST['announcement']
+        subjectCode = request.POST['subjectcodeanc']
         timeStamp = dt.now().strftime('%d/%m/%y')
         teacherName = request.user.get_full_name()
         data = {
@@ -212,6 +215,7 @@ def announcement(request):
             'teacher':teacherName,
             'text':announcementText,
             'seen':False,
+            'subjectCode':subjectCode,
         }
         myFireDBObject = fireData()
         myFireDBObject.push(data)
