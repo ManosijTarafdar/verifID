@@ -57,6 +57,6 @@ def assignments(request):
         subDataList.append(subDataListObject.copy())
         subDataListObject.clear()
     context = {
-        'dataList':subDataList,
+        'dataList':subDataList[::-1],
     }
     return render(request,'students/assignments.html',context)
