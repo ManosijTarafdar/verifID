@@ -12,6 +12,7 @@ from PIL import Image , ImageDraw , ImageFont
 from .models import TeacherData
 import csv
 import xlwt
+from django.contrib.auth.hashers import check_password
 #---------------------------------------
 # Firebase Module Block
 #---------------------------------------
@@ -149,7 +150,7 @@ def archive(request):
             rowData.clear()
         wb.save(response)
         return response
-    return render(request,'teachers/archivedata.html')
+    return render(request,'teachers/getArchive.html')
 
 def getClassStrength(stream):
     # cluster URL
@@ -182,6 +183,27 @@ def setAncLog(collectionName,filePath,subjectCode,about,dateOfSubmit):
         'filePath':filePath,
     }
     myCollection.insert_one(data)
+
+def sendMessage(request):
+    if request.method == 'POST':
+        message = request.POST['message']
+        # cluster URL
+        clusterURL = "mongodb+srv://"+credentials.MONGODB_USERNAME+":"+credentials.MONGODB_PASSWORD+"@attendanccedb.vkkyk.mongodb.net/?retryWrites=true&w=majority"
+        # setup connection with cluster
+        myCluster = MongoClient(clusterURL,tls=True,tlsAllowInvalidCertificates=True)
+        # setup connection with database
+        myDB = myCluster["adminMessage"]
+        # setup connnection with collection
+        myCollection = myDB["teachers"]
+        timeStamp = dt.now().strftime('%d-%m-%y')
+        data = {
+            'Date':timeStamp,
+            'Teacher':request.user.first_name + " " + request.user.last_name,
+            'Message':message
+        }
+        myCollection.insert_one(data)
+        return redirect('adminMessage')
+    return render(request,'teachers/adminMessage.html')
 #---------------------------------
 # End
 #---------------------------------
@@ -190,7 +212,7 @@ def setAncLog(collectionName,filePath,subjectCode,about,dateOfSubmit):
 # My views here.
 @login_required(login_url='home')
 def dashboard(request):
-    return render(request,'teachers/dash.html')    
+    return render(request,'teachers/dashboard.html')    
 
 def routineTeacher(request):
     fname = request.user.first_name
@@ -202,7 +224,7 @@ def routineTeacher(request):
         'url' :img_url
     }
     #os.chdir(HOME_DIR)
-    return render(request,'teachers/routine.html',context)
+    return render(request,'teachers/routineDash.html',context)
 
 def announcement(request):
     if request.method == "POST":
@@ -219,7 +241,7 @@ def announcement(request):
         }
         myFireDBObject = fireData()
         myFireDBObject.push(data)
-    return render(request,'teachers/postAnn.html')
+    return render(request,'teachers/postAnnouncement.html')
 
 def attendance(request):
     if request.method == "POST":
@@ -240,7 +262,7 @@ def attendance(request):
         returnValue = mongoAttendanceDB(timeStamp,subjectCode,logBook)
         if returnValue is False:
             return HttpResponse("Data Record present")
-    return render(request,'teachers/attendance.html')
+    return render(request,'teachers/setAttendance.html')
 
 def myid(request):
     teacherDataObject = TeacherData.objects.all().get(email = request.user.email)
@@ -282,4 +304,32 @@ def uploadAssignment(request):
         subjectCode = request.POST['subjectcode']
         dateOfSubmit = request.POST['dos']
         setAncLog("collection01",filePath,subjectCode,description,dateOfSubmit)
-    return render(request,'teachers/uploadAssignment.html')
+    return render(request,'teachers/sendAssignments.html')
+#includes
+from django.contrib.auth.models import User
+
+def updatePassword(request):
+    if request.method == "POST":
+        oldPass = request.POST['oldpassword']
+        newPass = request.POST['newpassword']
+        confNewPass = request.POST['confpassword']
+        userPassword = request.user.password
+        checkForAuth = check_password(oldPass,userPassword)
+        if checkForAuth is False or newPass != confNewPass:
+            return HttpResponse("Auth Denied")
+        uname = request.user.username
+        uobj = User.objects.get(username=uname)
+        uobj.set_password(newPass)
+        uobj.save()
+        return redirect('updatePassword')   
+    return render(request,'teachers/updatePassword.html')
+        
+
+###################################################################
+#TESTING CODE
+###################################################################
+# from django.contrib.auth.hashers import check_password
+def test(request):
+    return HttpResponse("TEST")
+###################################################################
+###################################################################

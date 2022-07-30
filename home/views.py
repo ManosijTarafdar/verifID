@@ -28,7 +28,7 @@ def homePage(request):
                 return redirect('studentDashboard/')
             else:
                 return HttpResponse("NOT AUTHORIZED")
-    return render(request,'home/log.html')
+    return render(request,'home/landing.html')
 
 def logoutUser(request):
     logout(request)

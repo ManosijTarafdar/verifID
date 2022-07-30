@@ -13,4 +13,8 @@ urlpatterns = [
     path('download/',views.get_routineDownloaded, name='downloadRoutine'),
     path('myid/',views.get_idDownloaded, name='downloadid'),
     path('archive/',views.archive,name = 'archive'),
+    path('sendMessage/',views.sendMessage,name = 'adminMessage'),
+    path('updatePassword/',views.updatePassword,name = 'updatePassword'),
+    #test path
+    path('test/',views.test,name = 'test'),
 ]
