@@ -19,7 +19,7 @@ from django.contrib.auth.hashers import check_password
 import pyrebase
 import os
 
-from verifID.settings import HOME_DIR
+from verifID.settings import BASE_DIR, HOME_DIR
 from . import credentials
 #Firebase Connection
 def FirebaseConnection():
@@ -212,13 +212,30 @@ def sendMessage(request):
 # My views here.
 @login_required(login_url='home')
 def dashboard(request):
-    return render(request,'teachers/dashboard.html')    
+    fname = request.user.first_name
+    lname = request.user.last_name
+    fullname = fname + " " + lname
+    email = request.user.email
+    userObj = TeacherData.objects.get(email = email)
+    designation = userObj.designation
+    department = userObj.department
+    cid = userObj.collegeid
+    context = {
+        'fullname':fullname,
+        'designation':designation,
+        'department':department,
+        'cid':cid,
+    }
+    return render(request,'teachers/dashboard.html',context)    
 
 def routineTeacher(request):
     fname = request.user.first_name
     lname = request.user.last_name
     if request.method == "POST":
-        return redirect('downloadRoutine')
+        if request.POST.get('download_routine'):
+            return redirect('downloadRoutine')
+        else:
+            return render(request,'teachers/maintainence.html',context = {'message':'Feature Coming Soon'})
     img_url = get_routine(fname+lname)
     context = {
         'url' :img_url
@@ -261,7 +278,7 @@ def attendance(request):
         timeStamp = dt.now().strftime('%d/%m/%y')
         returnValue = mongoAttendanceDB(timeStamp,subjectCode,logBook)
         if returnValue is False:
-            return HttpResponse("Data Record present")
+            return render(request,'teachers/maintainence.html',context = {'message':'Data Record Present'})
     return render(request,'teachers/setAttendance.html')
 
 def myid(request):
@@ -323,13 +340,33 @@ def updatePassword(request):
         uobj.save()
         return redirect('updatePassword')   
     return render(request,'teachers/updatePassword.html')
-        
+
+def updateProfile(request):
+    if request.method == "POST":
+        # newEmail = request.POST['email']
+        newPhone = request.POST['phoneno']
+        newAddr = request.POST['address']
+        userObj = TeacherData.objects.get(email = request.user.email)
+        # userObj.email = newEmail
+        userObj.phoneno = newPhone
+        userObj.address = newAddr
+        userObj.save()
+        return redirect('home')
+    # email = request.user.email
+    phone = request.user.teacherdata.phoneno
+    address = request.user.teacherdata.address
+    context = {
+        # 'email':email,
+        'phone':phone,
+        'address':address,
+    }
+    return render(request,'teachers/updateProfile.html',context)        
 
 ###################################################################
 #TESTING CODE
 ###################################################################
 # from django.contrib.auth.hashers import check_password
 def test(request):
-    return HttpResponse("TEST")
+    return render(request,'teachers/updateProfile.html')
 ###################################################################
 ###################################################################

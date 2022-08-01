@@ -28,12 +28,12 @@
         <div class="container-main">
             <div class="column col-1">
                 <div class="display">
-                    <img src="{{request.user.teacherdata.profile_pic.url}}" alt="" class="profile-pic">
+                    <img src="{{request.user.studentdata.profile_pic.url}}" alt="" class="profile-pic">
                     <div class="sub-section">
                         <h2>ID : {{cid}}</h2>
                         <h2>Name : {{fullname}}</h2>
-                        <h2>Designation : {{designation}}</h2>
                         <h2>Department : {{department}}</h2>
+                        <h2>Year : {{year}}</h2>
                     </div>
                     <!-- <div class="profile-pic-button">
                         <a href="#"><button type="submit" class="btn1">Change Profile Picture</button></a>
@@ -42,19 +42,19 @@
             </div>
             <div class="column col-2">
                 <div class="options">
-                    <a href="{% url 'myId' %}"><button type="submit">My ID</button></a>
-                    <a href="{% url 'routineTeacher' %}"><button type="submit">My Routine</button></a>
-                    <a href="{% url 'recordAttendance' %}"><button type="submit">Attendance</button></a>
-                    <a href="{% url 'archive' %}"><button type="submit">Archive Attendance</button></a>
-                    <a href="{% url 'postAnnouncement' %}"><button type="submit">Post Announcement</button></a>
-                    <a href="{% url 'postAssignment' %}"><button type="submit">Post Assignment</button></a>
+                    <a href="{% url 'myID' %}"><button type="submit">My ID</button></a>
+                    <a href="{% url 'myRoutine' %}"><button type="submit">My Routine</button></a>
+                    <a href="{% url 'myAttendance' %}"><button type="submit">Attendance</button></a>
+                    <!-- <a href="{% url 'archive' %}"><button type="submit">Archive Attendance</button></a> -->
+                    <a href="{% url 'announcementHome' %}"><button type="submit">Announcements</button></a>
+                    <a href="{% url 'assignmentsHome' %}"><button type="submit">Assignments</button></a>
                 </div>
             </div>
             <div class="column col-3">
                 <div class="options">
-                    <a href="{% url 'updateProfile' %}"><button type="submit">Update Phone & Address</button></a>
-                    <a href="{% url 'updatePassword' %}"><button type="submit">Reset Password</button></a>
-                    <a href="{% url 'adminMessage' %}"><button type="submit">Message Admin</button></a>
+                    <a href="{% url 'update' %}"><button type="submit">Update Phone & Address</button></a>
+                    <a href="{% url 'updatePasswordStudent' %}"><button type="submit">Reset Password</button></a>
+                    <a href="{% url 'messageAdmin' %}"><button type="submit">Message Admin</button></a>
                     <!-- <a href="#"><button type="submit">Post Assignment</button></a> -->
                 </div>
             </div>

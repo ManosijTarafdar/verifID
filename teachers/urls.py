@@ -15,6 +15,7 @@ urlpatterns = [
     path('archive/',views.archive,name = 'archive'),
     path('sendMessage/',views.sendMessage,name = 'adminMessage'),
     path('updatePassword/',views.updatePassword,name = 'updatePassword'),
+    path('updateProfile/',views.updateProfile,name = 'updateProfile'),
     #test path
     path('test/',views.test,name = 'test'),
 ]

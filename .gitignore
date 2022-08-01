@@ -1,3 +1,4 @@
 teachers/credentials.py
 teachers/__pycache__/credentials.cpython-38.pyc
-/etc/
+etc/
+static/images

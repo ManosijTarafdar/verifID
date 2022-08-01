@@ -173,7 +173,7 @@ nav a:hover{
   font-family: monospace;
   font-weight: 700;
   text-align: center;
-  font-size: 1.5rem;
+  /* font-size: 1rem; */
   color: #1c023d;
   margin:0;
   height: 30px;
